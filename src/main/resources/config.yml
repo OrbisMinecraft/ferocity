@@ -1,0 +1,15 @@
+# Basic placeholders:
+#   - <player-name>
+#   - <player-ping>
+#   - <player-server>
+# LuckPerms placeholders:
+#   - <luckperms-prefix>
+#   - <luckperms-suffix>
+#   - <luckperms-meta-$var>
+
+# Set the text displayed in the header and footer of the player-list. All placeholders apply to the current player.
+header: 'Welcome, <player-name>!\nYou are currently on <color:green><player-server>.'
+footer: '<color:aqua>orbismc.net'
+
+# Set the formatting of each player list entry. All placeholders apply to the individual players in the list
+entry: '(<luckperms-prefix>) <player-name>'
