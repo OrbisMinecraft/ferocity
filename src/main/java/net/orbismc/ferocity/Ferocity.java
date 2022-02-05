@@ -1,3 +1,8 @@
+/*
+ * Copyright © 2022 Luis Michaelis
+ * SPDX-License-Identifier: LGPL-3.0-only
+ */
+
 package net.orbismc.ferocity;
 
 import com.google.inject.Inject;
