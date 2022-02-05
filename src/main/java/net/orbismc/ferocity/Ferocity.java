@@ -11,6 +11,7 @@ import com.velocitypowered.api.event.proxy.ProxyInitializeEvent;
 import com.velocitypowered.api.plugin.Plugin;
 import com.velocitypowered.api.plugin.annotation.DataDirectory;
 import com.velocitypowered.api.proxy.ProxyServer;
+import net.orbismc.ferocity.command.FerocityCommand;
 import net.orbismc.ferocity.format.TemplateProvider;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -45,16 +46,25 @@ public class Ferocity {
 
 	@Subscribe
 	public void onProxyInitialization(final @NotNull ProxyInitializeEvent event) {
-		final var config = FerocityConfig.load(configurationDirectory.resolve("config.yml").toFile());
-		this.tabListHeader = config.getNode("header").getString("");
-		this.tabListFooter = config.getNode("footer").getString("");
-		this.tabListEntry = config.getNode("entry").getString("%player_name%");
+		final var commands = server.getCommandManager();
+		this.reload();
 
 		final var pluginManager = server.getPluginManager();
 		TemplateProvider.addAvailableProviders(pluginManager);
 
 		final var eventListener = new FerocityEventListener(this);
 		server.getEventManager().register(this, eventListener);
+		commands.register(commands.metaBuilder("ferocity").build(), new FerocityCommand(this));
+	}
+
+	/**
+	 * Reloads the plugin's configuration.
+	 */
+	public void reload() {
+		final var config = FerocityConfig.load(configurationDirectory.resolve("config.yml").toFile());
+		this.tabListHeader = config.getNode("header").getString("");
+		this.tabListFooter = config.getNode("footer").getString("");
+		this.tabListEntry = config.getNode("entry").getString("<player-name>");
 	}
 
 	public String getTabListHeaderText() {

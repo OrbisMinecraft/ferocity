@@ -6,6 +6,9 @@ Ferocity is a [Velocity](https://velocitypowered.com/) plugin for sharing the pl
 It also allows for adding header and footer bars to the player list and provides formatting using 
 [MiniMessage](https://docs.adventure.kyori.net/minimessage). Ferocity also includes basic support for LuckPerms.
 
+## Permissions
+Ferocity exposes a management command (`/ferocity`) which requires the `ferocity.manage` permission node to use.
+
 ## Building
 Ferocity is a Gradle project. To build it, you will need an up-to-date build of JDK 17 installed
 on your machine. To get started, download the source code (either by downloading the ZIP file or
