@@ -12,7 +12,7 @@ import com.velocitypowered.api.event.player.ServerConnectedEvent;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.player.TabListEntry;
 import net.kyori.adventure.text.minimessage.MiniMessage;
-import net.kyori.adventure.text.minimessage.markdown.DiscordFlavor;
+import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import net.orbismc.ferocity.format.TemplateProvider;
 import org.jetbrains.annotations.NotNull;
 
@@ -28,58 +28,54 @@ public class FerocityEventListener {
 
 	public FerocityEventListener(final @NotNull Ferocity plugin) {
 		this.plugin = plugin;
-		this.message = MiniMessage.builder()
-				.markdown()
-				.markdownFlavor(DiscordFlavor.get())
-				.build();
+		this.message = MiniMessage.builder().build();
 	}
 
 	@Subscribe(order = PostOrder.LAST)
 	public void connect(final @NotNull ServerConnectedEvent event) {
-		plugin.getServer().getScheduler().buildTask(plugin, () ->
-				updatePlayerList(event.getPlayer())).delay(2, TimeUnit.SECONDS).schedule();
+		plugin.getServer().getScheduler().buildTask(plugin, this::updatePlayerList).delay(2, TimeUnit.SECONDS)
+				.schedule();
 	}
 
 	@Subscribe(order = PostOrder.LAST)
 	public void disconnect(final @NotNull DisconnectEvent event) {
-		final var player = event.getPlayer();
-
-		for (final Player other : this.plugin.getServer().getAllPlayers()) {
-			other.getCurrentServer().ifPresent(server -> {
-				if (other.getTabList().containsEntry(player.getUniqueId())) {
-					other.getTabList().removeEntry(player.getUniqueId());
-				}
-			});
-		}
+		plugin.getServer().getScheduler().buildTask(plugin, this::updatePlayerList).delay(2, TimeUnit.SECONDS)
+				.schedule();
 	}
 
+	public void updatePlayerList() {
+		this.plugin.getServer().getAllPlayers().forEach(this::updatePlayerList);
+	}
 
 	public void updatePlayerList(final @NotNull Player forPlayer) {
 		for (final Player other : this.plugin.getServer().getAllPlayers()) {
+			final var resolver = TagResolver.resolver(TemplateProvider.getAllTemplates(other));
 			other.getCurrentServer().ifPresent(server -> {
-				if (other.getTabList().containsEntry(forPlayer.getUniqueId())) {
-					other.getTabList().removeEntry(forPlayer.getUniqueId());
+
+				if (forPlayer.getTabList().containsEntry(other.getUniqueId())) {
+					forPlayer.getTabList().removeEntry(other.getUniqueId());
 				}
 
-				final var text = message.parse(
+				final var text = message.deserialize(
 						plugin.getTabListEntryText(),
-						TemplateProvider.getAllTemplates(forPlayer)
+						resolver
 				);
 
-				other.getTabList().addEntry(
+				forPlayer.getTabList().addEntry(
 						TabListEntry.builder()
 								.displayName(text)
-								.profile(forPlayer.getGameProfile())
+								.profile(other.getGameProfile())
 								.gameMode(0)
 								.latency(30)
-								.tabList(other.getTabList())
+								.tabList(forPlayer.getTabList())
 								.build()
 				);
 			});
 		}
 
-		final var header = message.parse(plugin.getTabListHeaderText(), TemplateProvider.getAllTemplates(forPlayer));
-		final var footer = message.parse(plugin.getTabListFooterText(), TemplateProvider.getAllTemplates(forPlayer));
+		final var resolver = TagResolver.resolver(TemplateProvider.getAllTemplates(forPlayer));
+		final var header = message.deserialize(plugin.getTabListHeaderText(), resolver);
+		final var footer = message.deserialize(plugin.getTabListFooterText(), resolver);
 		forPlayer.sendPlayerListHeaderAndFooter(header, footer);
 	}
 }

@@ -6,7 +6,7 @@ package net.orbismc.ferocity.format;
 
 import com.velocitypowered.api.plugin.PluginManager;
 import com.velocitypowered.api.proxy.Player;
-import net.kyori.adventure.text.minimessage.Template;
+import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import net.luckperms.api.LuckPermsProvider;
 import org.jetbrains.annotations.NotNull;
 
@@ -22,8 +22,9 @@ public abstract class TemplateProvider {
 	 * @param pluginManager Velocity's plugin manager.
 	 */
 	public static void addAvailableProviders(final @NotNull PluginManager pluginManager) {
-		if (pluginManager.isLoaded("luckperms"))
+		if (pluginManager.isLoaded("luckperms")) {
 			addFormatter(new LuckPermsTemplateProvider(LuckPermsProvider.get()));
+		}
 		addFormatter(new BasicPlayerTemplateProvider());
 	}
 
@@ -31,14 +32,15 @@ public abstract class TemplateProvider {
 		CHAIN.add(provider);
 	}
 
-	public static List<Template> getAllTemplates(final @NotNull Player player) {
-		final List<Template> all = new ArrayList<>();
+	public static List<TagResolver> getAllTemplates(final @NotNull Player player) {
+		final List<TagResolver> all = new ArrayList<>();
 
-		for (final var formatter : CHAIN)
+		for (final var formatter : CHAIN) {
 			all.addAll(formatter.getTemplates(player));
+		}
 
 		return all;
 	}
 
-	public abstract List<Template> getTemplates(final @NotNull Player player);
+	public abstract List<TagResolver> getTemplates(final @NotNull Player player);
 }

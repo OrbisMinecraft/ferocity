@@ -10,7 +10,10 @@ import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.proxy.ProxyInitializeEvent;
 import com.velocitypowered.api.plugin.Plugin;
 import com.velocitypowered.api.plugin.annotation.DataDirectory;
+import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
+import net.luckperms.api.LuckPermsProvider;
+import net.luckperms.api.event.node.NodeMutateEvent;
 import net.orbismc.ferocity.command.FerocityCommand;
 import net.orbismc.ferocity.format.TemplateProvider;
 import org.jetbrains.annotations.NotNull;
@@ -55,6 +58,12 @@ public class Ferocity {
 		final var eventListener = new FerocityEventListener(this);
 		server.getEventManager().register(this, eventListener);
 		commands.register(commands.metaBuilder("ferocity").build(), new FerocityCommand(this));
+
+		LuckPermsProvider.get().getEventBus().subscribe(this, NodeMutateEvent.class, playerDataSaveEvent -> {
+			for (final Player player : this.getServer().getAllPlayers()) {
+				eventListener.updatePlayerList(player);
+			}
+		});
 	}
 
 	/**

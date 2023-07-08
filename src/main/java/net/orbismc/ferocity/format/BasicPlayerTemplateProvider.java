@@ -5,7 +5,9 @@
 package net.orbismc.ferocity.format;
 
 import com.velocitypowered.api.proxy.Player;
-import net.kyori.adventure.text.minimessage.Template;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.minimessage.tag.Tag;
+import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
@@ -15,13 +17,15 @@ import java.util.List;
  */
 public class BasicPlayerTemplateProvider extends TemplateProvider {
 	@Override
-	public List<Template> getTemplates(@NotNull Player player) {
-		final var server = player.getCurrentServer().isPresent() ? player.getCurrentServer().get().getServerInfo().getName() : "";
+	public List<TagResolver> getTemplates(@NotNull Player player) {
+		final var server = player.getCurrentServer().isPresent() ?
+				player.getCurrentServer().get().getServerInfo().getName() :
+				"";
 
 		return List.of(
-				Template.of("player-name", player.getUsername()),
-				Template.of("player-ping", Long.toString(player.getPing())),
-				Template.of("player-server", server)
+				TagResolver.resolver("player-name", Tag.inserting(Component.text(player.getUsername()))),
+				TagResolver.resolver("player-ping", Tag.inserting(Component.text(player.getPing()))),
+				TagResolver.resolver("player-server", Tag.inserting(Component.text(server)))
 		);
 	}
 }

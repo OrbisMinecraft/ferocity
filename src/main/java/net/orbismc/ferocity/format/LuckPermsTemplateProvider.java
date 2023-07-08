@@ -5,7 +5,9 @@
 package net.orbismc.ferocity.format;
 
 import com.velocitypowered.api.proxy.Player;
-import net.kyori.adventure.text.minimessage.Template;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.minimessage.tag.Tag;
+import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import net.luckperms.api.LuckPerms;
 import net.luckperms.api.platform.PlayerAdapter;
 import org.jetbrains.annotations.NotNull;
@@ -25,15 +27,20 @@ public class LuckPermsTemplateProvider extends TemplateProvider {
 	}
 
 	@Override
-	public List<Template> getTemplates(@NotNull Player player) {
+	public List<TagResolver> getTemplates(@NotNull Player player) {
 		final var metadata = this.adapter.getMetaData(player);
 
-		final var templates = new ArrayList<Template>(2 + metadata.getMeta().size());
-		templates.add(Template.of("luckperms-prefix", Objects.requireNonNullElse(metadata.getPrefix(), "")));
-		templates.add(Template.of("luckperms-suffix", Objects.requireNonNullElse(metadata.getSuffix(), "")));
+		final var templates = new ArrayList<TagResolver>(2 + metadata.getMeta().size());
+
+		final var prefix = Tag.inserting(Component.text(Objects.requireNonNullElse(metadata.getPrefix(), "")));
+		final var suffix = Tag.inserting(Component.text(Objects.requireNonNullElse(metadata.getSuffix(), "")));
+
+		templates.add(TagResolver.resolver("luckperms-prefix", prefix));
+		templates.add(TagResolver.resolver("luckperms-suffix", suffix));
 
 		for (final var m : metadata.getMeta().keySet()) {
-			templates.add(Template.of("luckperms-meta-" + m, Objects.requireNonNull(metadata.getMetaValue(m))));
+			final var t = Tag.inserting(Component.text(Objects.requireNonNull(metadata.getMetaValue(m))));
+			templates.add(TagResolver.resolver("luckperms-meta-" + m, t));
 		}
 
 		return templates;
