@@ -20,6 +20,7 @@ import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 
 import java.nio.file.Path;
+import java.util.concurrent.TimeUnit;
 
 @Plugin(
 		id = "ferocity",
@@ -64,6 +65,9 @@ public class Ferocity {
 				eventListener.updatePlayerList(player);
 			}
 		});
+
+		getServer().getScheduler().buildTask(this, eventListener::updatePlayerList).repeat(20, TimeUnit.SECONDS)
+				.schedule();
 	}
 
 	/**
