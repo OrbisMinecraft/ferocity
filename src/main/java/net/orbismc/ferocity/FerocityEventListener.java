@@ -11,11 +11,16 @@ import com.velocitypowered.api.event.connection.DisconnectEvent;
 import com.velocitypowered.api.event.player.ServerConnectedEvent;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.player.TabListEntry;
+import ir.syrent.velocityvanish.velocity.event.VelocityUnVanishEvent;
+import ir.syrent.velocityvanish.velocity.event.VelocityVanishEvent;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import net.orbismc.ferocity.format.TemplateProvider;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.HashSet;
+import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -25,6 +30,7 @@ import java.util.concurrent.TimeUnit;
 public class FerocityEventListener {
 	private final Ferocity plugin;
 	private final MiniMessage message;
+	private final Set<UUID> vanished  = new HashSet<>();
 
 	public FerocityEventListener(final @NotNull Ferocity plugin) {
 		this.plugin = plugin;
@@ -32,14 +38,24 @@ public class FerocityEventListener {
 	}
 
 	@Subscribe(order = PostOrder.LAST)
+	public void onVanish(final @NotNull VelocityVanishEvent event) {
+		event.getPlayer().ifPresent(player -> vanished.add(player.getUniqueId()));
+		updatePlayerList();
+	}
+	@Subscribe(order = PostOrder.LAST)
+	public void onUnVanish(final @NotNull VelocityUnVanishEvent event) {
+		event.getPlayer().ifPresent(player -> vanished.remove(player.getUniqueId()));
+	}
+
+	@Subscribe(order = PostOrder.LAST)
 	public void connect(final @NotNull ServerConnectedEvent event) {
-		plugin.getServer().getScheduler().buildTask(plugin, this::updatePlayerList).delay(2, TimeUnit.SECONDS)
+		plugin.getServer().getScheduler().buildTask(plugin, this::updatePlayerList).delay(1, TimeUnit.SECONDS)
 				.schedule();
 	}
 
 	@Subscribe(order = PostOrder.LAST)
 	public void disconnect(final @NotNull DisconnectEvent event) {
-		plugin.getServer().getScheduler().buildTask(plugin, this::updatePlayerList).delay(2, TimeUnit.SECONDS)
+		plugin.getServer().getScheduler().buildTask(plugin, this::updatePlayerList).delay(1, TimeUnit.SECONDS)
 				.schedule();
 	}
 
@@ -49,9 +65,12 @@ public class FerocityEventListener {
 
 	public void updatePlayerList(final @NotNull Player forPlayer) {
 		for (final Player other : this.plugin.getServer().getAllPlayers()) {
+			if (this.vanished.contains(other.getUniqueId())) {
+				continue;
+			}
+
 			final var resolver = TagResolver.resolver(TemplateProvider.getAllTemplates(other));
 			other.getCurrentServer().ifPresent(server -> {
-
 				if (forPlayer.getTabList().containsEntry(other.getUniqueId())) {
 					forPlayer.getTabList().removeEntry(other.getUniqueId());
 				}
